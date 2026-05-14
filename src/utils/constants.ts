@@ -1,0 +1,10 @@
+export const DEFAULT_API_ENDPOINT = 'https://api.openai.com/v1';
+export const DEFAULT_MODEL = 'gpt-4o-mini';
+export const WAKEN_INTERVAL_MIN_MS = 45 * 60 * 1000;   // 45 min
+export const WAKEN_INTERVAL_MAX_MS = 90 * 60 * 1000;   // 90 min
+export const DAILY_MAX_CONVERSATIONS = 12;
+export const CONSECUTIVE_MISSES_MULTIPLIER = 2;
+export const IDLE_TIMEOUT_MS = 5 * 60 * 1000;           // 5 min
+export const NIGHT_START_HOUR = 0;
+export const NIGHT_END_HOUR = 8;
+export const MAX_HISTORY_MESSAGES = 20;
