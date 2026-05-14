@@ -1,0 +1,19 @@
+{
+  "permissions": {
+    "allow": [
+      "Read(//c/Users/Administrator/.claude/plugins/cache/claude-plugins-official/superpowers/5.1.0/skills/subagent-driven-development/**)",
+      "Bash(git -C \"e:/vibe-coding-programs/English-friend\" status)",
+      "Bash(npm --version)",
+      "Bash(npx @react-native-community/cli init EnglishFriend --directory . --skip-install)",
+      "Bash(npx @react-native-community/cli init EnglishFriend --directory EnglishFriend --skip-install)",
+      "Bash(cp -r \"e:/vibe-coding-programs/English-friend-temp/EnglishFriend/\"* \"e:/vibe-coding-programs/English-friend/\")",
+      "Bash(cp -r \"e:/vibe-coding-programs/English-friend-temp/EnglishFriend/\".[!.]* \"e:/vibe-coding-programs/English-friend/\")",
+      "Bash(npm install *)"
+    ],
+    "additionalDirectories": [
+      "e:\\vibe-coding-programs\\English-friend\\docs\\superpowers",
+      "\\tmp",
+      "e:\\vibe-coding-programs"
+    ]
+  }
+}
