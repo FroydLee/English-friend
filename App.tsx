@@ -1,45 +1,64 @@
-/**
- * Sample React Native App
- * https://github.com/facebook/react-native
- *
- * @format
- */
+import React, { useEffect } from 'react';
+import { View } from 'react-native';
+import { NavigationContainer } from '@react-navigation/native';
+import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import { PetProvider, usePetContext } from './src/state/PetContext';
+import { PetOverlay } from './src/components/PetOverlay';
+import { SettingsScreen } from './src/screens/SettingsScreen';
+import { buildStorage, StorageKeys } from './src/utils/storage';
+import type { AppSettings } from './src/types';
+import { DEFAULT_API_ENDPOINT, DEFAULT_MODEL, DAILY_MAX_CONVERSATIONS } from './src/utils/constants';
 
-import { NewAppScreen } from '@react-native/new-app-screen';
-import { StatusBar, StyleSheet, useColorScheme, View } from 'react-native';
-import {
-  SafeAreaProvider,
-  useSafeAreaInsets,
-} from 'react-native-safe-area-context';
+const Stack = createNativeStackNavigator();
+const settingsStorage = buildStorage<AppSettings>(StorageKeys.SETTINGS);
 
-function App() {
-  const isDarkMode = useColorScheme() === 'dark';
+const DEFAULT_SETTINGS: AppSettings = {
+  apiKey: '',
+  apiEndpoint: DEFAULT_API_ENDPOINT,
+  modelName: DEFAULT_MODEL,
+  dailyMaxConversations: DAILY_MAX_CONVERSATIONS,
+  enabled: true,
+};
 
-  return (
-    <SafeAreaProvider>
-      <StatusBar barStyle={isDarkMode ? 'light-content' : 'dark-content'} />
-      <AppContent />
-    </SafeAreaProvider>
-  );
+function HomeScreen() {
+  return null;
 }
 
 function AppContent() {
-  const safeAreaInsets = useSafeAreaInsets();
+  const { timeout } = usePetContext();
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      timeout();
+    }, 5 * 60 * 1000);
+    return () => clearInterval(interval);
+  }, [timeout]);
 
   return (
-    <View style={styles.container}>
-      <NewAppScreen
-        templateFileName="App.tsx"
-        safeAreaInsets={safeAreaInsets}
-      />
+    <View style={{ flex: 1 }}>
+      <PetOverlay />
     </View>
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
-});
-
-export default App;
+export default function App() {
+  return (
+    <PetProvider>
+      <NavigationContainer>
+        <Stack.Navigator>
+          <Stack.Screen
+            name="Home"
+            component={HomeScreen}
+            options={{ headerShown: false }}
+          />
+          <Stack.Screen
+            name="Settings"
+            component={SettingsScreen}
+            options={{ title: 'Settings' }}
+          />
+        </Stack.Navigator>
+      </NavigationContainer>
+      <AppContent />
+    </PetProvider>
+  );
+}
