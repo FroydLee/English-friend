@@ -60,23 +60,28 @@ Rules:
   }
 
   async generateResponse(messages: Message[], interests: string[]): Promise<string | null> {
-    const body = this.buildRequestBody(messages, interests);
+    try {
+      const body = this.buildRequestBody(messages, interests);
 
-    const response = await fetch(`${this.endpoint}/chat/completions`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${this.apiKey}`,
-      },
-      body: JSON.stringify(body),
-    });
+      const response = await fetch(`${this.endpoint}/chat/completions`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${this.apiKey}`,
+        },
+        body: JSON.stringify(body),
+      });
 
-    if (!response.ok) {
-      console.warn(`AI API error: ${response.status} ${response.statusText}`);
+      if (!response.ok) {
+        console.warn(`AI API error: ${response.status} ${response.statusText}`);
+        return null;
+      }
+
+      const json = await response.json();
+      return this.parseResponse(json);
+    } catch (e) {
+      console.warn('AI API request failed:', e);
       return null;
     }
-
-    const json = await response.json();
-    return this.parseResponse(json);
   }
 }

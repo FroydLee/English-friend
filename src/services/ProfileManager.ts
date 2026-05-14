@@ -53,14 +53,15 @@ export class ProfileManager {
     }
 
     // Mentioned topics: uncommon words with 3+ chars
+    const newTopics = [...profile.mentionedTopics];
     for (const word of words) {
       if (word.length < 3) continue;
-      if (!newInterests.has(word) && !profile.mentionedTopics.includes(word) && profile.mentionedTopics.length < 20) {
-        profile.mentionedTopics.push(word);
+      if (!newInterests.has(word) && !newTopics.includes(word) && newTopics.length < 20) {
+        newTopics.push(word);
       }
     }
 
-    return { ...profile, interests: Array.from(newInterests) };
+    return { ...profile, interests: Array.from(newInterests), mentionedTopics: newTopics };
   }
 
   trackResponseTime(profile: UserProfile, responseTimeMs: number): UserProfile {

@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, StyleSheet } from 'react-native';
+import { View, Text, StyleSheet } from 'react-native';
 import { PetStatus } from '../types';
 import { PetAnimation } from './PetAnimation';
 import { SpeechBubble } from './SpeechBubble';
@@ -9,7 +9,7 @@ import { usePetContext } from '../state/PetContext';
 export function PetOverlay() {
   const {
     status, wake, startConversation, endConversation,
-    currentMessage, setCurrentMessage,
+    currentMessage, setCurrentMessage, sendReply, isLoading,
   } = usePetContext();
 
   const handlePetPress = () => {
@@ -21,8 +21,7 @@ export function PetOverlay() {
   };
 
   const handleSendReply = (text: string) => {
-    console.log('User reply:', text);
-    // TODO: wire up AI service + conversation manager
+    sendReply(text);
   };
 
   const handleClose = () => {
@@ -41,10 +40,16 @@ export function PetOverlay() {
   return (
     <View style={styles.container}>
       <PetAnimation status={status} onPress={handlePetPress} />
-      {status === PetStatus.CONVERSING && currentMessage && (
+      {status === PetStatus.CONVERSING && (
         <View style={styles.chatArea}>
-          <SpeechBubble message={currentMessage} onClose={handleClose} />
-          <ChatInput onSend={handleSendReply} />
+          {isLoading && !currentMessage ? (
+            <View style={styles.loadingBubble}>
+              <Text style={styles.loadingText}>...</Text>
+            </View>
+          ) : currentMessage ? (
+            <SpeechBubble message={currentMessage} onClose={handleClose} />
+          ) : null}
+          <ChatInput onSend={handleSendReply} disabled={isLoading} />
         </View>
       )}
     </View>
@@ -58,5 +63,21 @@ const styles = StyleSheet.create({
   chatArea: {
     marginTop: 8,
     alignItems: 'center',
+  },
+  loadingBubble: {
+    backgroundColor: 'white',
+    borderRadius: 16,
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    marginBottom: 8,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.15,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  loadingText: {
+    fontSize: 18,
+    color: '#999',
   },
 });
