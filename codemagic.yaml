@@ -13,10 +13,10 @@ workflows:
       - name: Run tests
         script: |
           npx jest --no-cache
-      - name: Build Android APK (Debug)
+      - name: Build Android APK (Release)
         script: |
           cd android
           chmod +x gradlew
-          ./gradlew assembleDebug
+          ./gradlew assembleRelease
     artifacts:
       - android/app/build/outputs/apk/**/*.apk
