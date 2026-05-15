@@ -1,7 +1,7 @@
 package com.englishfriend
 
-import android.app.Activity
 import android.content.Intent
+import android.os.Build
 import android.provider.Settings
 import com.facebook.react.bridge.*
 
@@ -12,7 +12,8 @@ class FloatingWindowModule(reactContext: ReactApplicationContext) :
 
     @ReactMethod
     fun startService(promise: Promise) {
-        val activity = currentActivity ?: run {
+        val activity = getCurrentActivity()
+        if (activity == null) {
             promise.reject("NO_ACTIVITY", "No current activity")
             return
         }
@@ -36,7 +37,7 @@ class FloatingWindowModule(reactContext: ReactApplicationContext) :
 
     @ReactMethod
     fun stopService(promise: Promise) {
-        val activity = currentActivity
+        val activity = getCurrentActivity()
         if (activity != null) {
             val serviceIntent = Intent(activity, FloatingWindowService::class.java)
             activity.stopService(serviceIntent)
