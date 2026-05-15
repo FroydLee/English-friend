@@ -1,27 +1,21 @@
 import React, { useEffect } from 'react';
-import { View } from 'react-native';
-import { NavigationContainer } from '@react-navigation/native';
+import { TouchableOpacity, Text, View } from 'react-native';
+import { NavigationContainer, useNavigation } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { PetProvider, usePetContext } from './src/state/PetContext';
 import { PetOverlay } from './src/components/PetOverlay';
+import { ChatScreen } from './src/screens/ChatScreen';
 import { SettingsScreen } from './src/screens/SettingsScreen';
-import { buildStorage, StorageKeys } from './src/utils/storage';
-import type { AppSettings } from './src/types';
-import { DEFAULT_API_ENDPOINT, DEFAULT_MODEL, DAILY_MAX_CONVERSATIONS } from './src/utils/constants';
 
 const Stack = createNativeStackNavigator();
-const settingsStorage = buildStorage<AppSettings>(StorageKeys.SETTINGS);
 
-const DEFAULT_SETTINGS: AppSettings = {
-  apiKey: '',
-  apiEndpoint: DEFAULT_API_ENDPOINT,
-  modelName: DEFAULT_MODEL,
-  dailyMaxConversations: DAILY_MAX_CONVERSATIONS,
-  enabled: true,
-};
-
-function HomeScreen() {
-  return null;
+function ChatHeaderRight() {
+  const navigation = useNavigation();
+  return (
+    <TouchableOpacity onPress={() => navigation.navigate('Settings')} style={{ marginRight: 8 }}>
+      <Text style={{ fontSize: 16, color: '#4A90D9' }}>Settings</Text>
+    </TouchableOpacity>
+  );
 }
 
 function AppContent() {
@@ -35,7 +29,7 @@ function AppContent() {
   }, [timeout]);
 
   return (
-    <View style={{ flex: 1 }}>
+    <View style={{ flex: 1 }} pointerEvents="box-none">
       <PetOverlay />
     </View>
   );
@@ -47,9 +41,12 @@ export default function App() {
       <NavigationContainer>
         <Stack.Navigator>
           <Stack.Screen
-            name="Home"
-            component={HomeScreen}
-            options={{ headerShown: false }}
+            name="Chat"
+            component={ChatScreen}
+            options={{
+              title: 'English Friend',
+              headerRight: () => <ChatHeaderRight />,
+            }}
           />
           <Stack.Screen
             name="Settings"

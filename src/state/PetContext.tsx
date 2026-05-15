@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useCallback, useEffect, useRef, type ReactNode } from 'react';
-import { PetStatus, type AppSettings } from '../types';
+import { PetStatus, type AppSettings, type Message } from '../types';
 import { AiService } from '../services/AiService';
 import { ConversationManager } from '../services/ConversationManager';
 import { ProfileManager } from '../services/ProfileManager';
@@ -14,6 +14,8 @@ interface PetContextValue {
   endConversation: () => void;
   timeout: () => void;
   sendReply: (text: string) => Promise<void>;
+  startNewChat: () => Promise<void>;
+  messages: Message[];
   currentMessage: string | null;
   isLoading: boolean;
 }
@@ -24,6 +26,7 @@ const PetContext = createContext<PetContextValue | null>(null);
 export function PetProvider({ children }: { children: ReactNode }) {
   const [status, setStatus] = useState<PetStatus>(PetStatus.SLEEPING);
   const [currentMessage, setCurrentMessage] = useState<string | null>(null);
+  const [messages, setMessages] = useState<Message[]>([]);
   const [isLoading, setIsLoading] = useState(false);
 
   const servicesRef = useRef<{
@@ -51,36 +54,91 @@ export function PetProvider({ children }: { children: ReactNode }) {
       });
 
       await conversation.loadHistory();
-
       servicesRef.current = { ai, conversation, profile, scheduler };
     })();
   }, []);
 
-  // Generate opener when entering CONVERSING
-  useEffect(() => {
-    if (status !== PetStatus.CONVERSING) return;
+  const syncMessages = useCallback(() => {
+    const conv = servicesRef.current?.conversation.currentConversation;
+    if (conv) {
+      setMessages([...conv.messages]);
+    }
+  }, []);
+
+  const startNewChat = useCallback(async () => {
     const services = servicesRef.current;
     if (!services) return;
 
-    (async () => {
-      setIsLoading(true);
-      try {
-        const profile = await services.profile.load();
-        const response = await services.ai.generateResponse([], profile.interests);
-        if (response) {
-          services.conversation.startNewConversation();
-          services.conversation.addMessage('assistant', response);
-          setCurrentMessage(response);
-        } else {
-          setCurrentMessage("Hey! What's on your mind?");
-        }
-      } catch {
-        setCurrentMessage("Hey! What's up?");
-      } finally {
-        setIsLoading(false);
+    services.conversation.endConversation();
+    services.conversation.startNewConversation();
+    setCurrentMessage(null);
+    setMessages([]);
+    setIsLoading(true);
+
+    try {
+      const profile = await services.profile.load();
+      const response = await services.ai.generateResponse([], profile.interests);
+      if (response) {
+        services.conversation.addMessage('assistant', response);
+        setCurrentMessage(response);
+        syncMessages();
+      } else {
+        const fallback = "Hey! What's on your mind?";
+        services.conversation.addMessage('assistant', fallback);
+        setCurrentMessage(fallback);
+        syncMessages();
       }
-    })();
-  }, [status]);
+    } catch {
+      const fallback = "Hey! What's up?";
+      services.conversation.addMessage('assistant', fallback);
+      setCurrentMessage(fallback);
+      syncMessages();
+    } finally {
+      setIsLoading(false);
+    }
+  }, [syncMessages]);
+
+  const sendReply = useCallback(async (text: string) => {
+    const services = servicesRef.current;
+    if (!services) return;
+
+    if (status !== PetStatus.CONVERSING) {
+      services.conversation.startNewConversation();
+    }
+
+    services.conversation.addMessage('user', text);
+    syncMessages();
+    setIsLoading(true);
+
+    try {
+      let profile = await services.profile.load();
+      profile = services.profile.recordConversation(profile, Date.now());
+      profile = services.profile.extractInterests(profile, text);
+      await services.profile.save(profile);
+
+      const history = services.conversation.currentConversation?.messages || [];
+      const response = await services.ai.generateResponse(history, profile.interests);
+
+      if (response) {
+        services.conversation.addMessage('assistant', response);
+        setCurrentMessage(response);
+        syncMessages();
+      } else {
+        const fallback = 'Sorry, I zoned out. Say that again?';
+        services.conversation.addMessage('assistant', fallback);
+        setCurrentMessage(fallback);
+        syncMessages();
+      }
+    } catch {
+      const fallback = 'Hmm, something went wrong. Can you say that again?';
+      services.conversation.addMessage('assistant', fallback);
+      setCurrentMessage(fallback);
+      syncMessages();
+    } finally {
+      setIsLoading(false);
+      setStatus(PetStatus.CONVERSING);
+    }
+  }, [status, syncMessages]);
 
   const wake = useCallback(() => {
     setStatus((s) => (s === PetStatus.SLEEPING ? PetStatus.ACTIVE : s));
@@ -101,38 +159,9 @@ export function PetProvider({ children }: { children: ReactNode }) {
     setStatus((s) => (s === PetStatus.ACTIVE ? PetStatus.SLEEPING : s));
   }, []);
 
-  const sendReply = useCallback(async (text: string) => {
-    const services = servicesRef.current;
-    if (!services || status !== PetStatus.CONVERSING) return;
-
-    setIsLoading(true);
-    try {
-      services.conversation.addMessage('user', text);
-
-      let profile = await services.profile.load();
-      profile = services.profile.recordConversation(profile, Date.now());
-      profile = services.profile.extractInterests(profile, text);
-      await services.profile.save(profile);
-
-      const history = services.conversation.currentConversation?.messages || [];
-      const response = await services.ai.generateResponse(history, profile.interests);
-
-      if (response) {
-        services.conversation.addMessage('assistant', response);
-        setCurrentMessage(response);
-      } else {
-        setCurrentMessage('Sorry, I zoned out. Say that again?');
-      }
-    } catch {
-      setCurrentMessage('Hmm, something went wrong. Can you say that again?');
-    } finally {
-      setIsLoading(false);
-    }
-  }, [status]);
-
   const value: PetContextValue = {
     status, wake, startConversation, endConversation, timeout,
-    sendReply, currentMessage, isLoading,
+    sendReply, startNewChat, messages, currentMessage, isLoading,
   };
 
   return React.createElement(PetContext.Provider, { value }, children);

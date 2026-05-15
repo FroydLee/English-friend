@@ -1,5 +1,5 @@
-export const DEFAULT_API_ENDPOINT = 'https://api.openai.com/v1';
-export const DEFAULT_MODEL = 'gpt-4o-mini';
+export const DEFAULT_API_ENDPOINT = 'https://api.deepseek.com/v1';
+export const DEFAULT_MODEL = 'deepseek-v4-flash';
 export const WAKEN_INTERVAL_MIN_MS = 45 * 60 * 1000;   // 45 min
 export const WAKEN_INTERVAL_MAX_MS = 90 * 60 * 1000;   // 90 min
 export const DAILY_MAX_CONVERSATIONS = 12;
