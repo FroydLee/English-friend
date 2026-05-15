@@ -6,8 +6,6 @@ workflows:
     environment:
       vars:
         CM_NODE_VERSION: '22'
-      groups:
-        - google_play
     scripts:
       - name: Install dependencies
         script: |
@@ -21,10 +19,3 @@ workflows:
           ./gradlew assembleDebug
     artifacts:
       - android/app/build/outputs/apk/**/*.apk
-    publishing:
-      email:
-        recipients:
-          - recipient@example.com
-      google_play:
-        credentials: $GCLOUD_SERVICE_ACCOUNT_CREDENTIALS
-        track: internal
