@@ -18,6 +18,8 @@ interface PetContextValue {
   messages: Message[];
   currentMessage: string | null;
   isLoading: boolean;
+  isReady: boolean;
+  setCurrentMessage: (msg: string | null) => void;
 }
 
 const settingsStorage = buildStorage<AppSettings>(StorageKeys.SETTINGS);
@@ -28,6 +30,7 @@ export function PetProvider({ children }: { children: ReactNode }) {
   const [currentMessage, setCurrentMessage] = useState<string | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [isReady, setIsReady] = useState(false);
 
   const servicesRef = useRef<{
     ai: AiService;
@@ -55,6 +58,7 @@ export function PetProvider({ children }: { children: ReactNode }) {
 
       await conversation.loadHistory();
       servicesRef.current = { ai, conversation, profile, scheduler };
+      setIsReady(true);
     })();
   }, []);
 
@@ -161,7 +165,8 @@ export function PetProvider({ children }: { children: ReactNode }) {
 
   const value: PetContextValue = {
     status, wake, startConversation, endConversation, timeout,
-    sendReply, startNewChat, messages, currentMessage, isLoading,
+    sendReply, startNewChat, messages, currentMessage, isLoading, isReady,
+    setCurrentMessage,
   };
 
   return React.createElement(PetContext.Provider, { value }, children);

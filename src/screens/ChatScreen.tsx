@@ -20,15 +20,15 @@ function MessageBubble({ message }: { message: Message }) {
 }
 
 export function ChatScreen() {
-  const { messages, sendReply, startNewChat, isLoading } = usePetContext();
+  const { messages, sendReply, startNewChat, isLoading, isReady } = usePetContext();
   const [input, setInput] = useState('');
   const flatListRef = useRef<FlatList>(null);
 
   useEffect(() => {
-    if (messages.length === 0) {
+    if (isReady && messages.length === 0) {
       startNewChat();
     }
-  }, []);
+  }, [isReady]);
 
   useEffect(() => {
     if (messages.length > 0) {
