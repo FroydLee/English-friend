@@ -14,6 +14,21 @@ workflows:
       - name: Run tests
         script: |
           npx jest --no-cache
+      - name: Verify Hermes compiler bytecode version
+        script: |
+          HERMESC="node_modules/hermes-compiler/hermesc/osx-bin/hermesc"
+          if [ -f "$HERMESC" ]; then
+            VERSION_OUTPUT=$("$HERMESC" -version 2>&1)
+            echo "$VERSION_OUTPUT"
+            if echo "$VERSION_OUTPUT" | grep -q "HBC bytecode version: 98"; then
+              echo "✅ Hermes V1 compiler producing bytecode v98 (compatible with runtime)"
+            else
+              echo "❌ Bytecode version mismatch! Expected 98"
+              exit 1
+            fi
+          else
+            echo "⚠️  hermesc not found at $HERMESC, will use Gradle auto-detection"
+          fi
       - name: Build Android APK (Release)
         script: |
           cd android
