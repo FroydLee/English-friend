@@ -7,9 +7,10 @@ workflows:
       vars:
         CM_NODE_VERSION: '22'
     scripts:
-      - name: Install dependencies
+      - name: Install dependencies (clean)
         script: |
-          npm install
+          rm -rf node_modules
+          npm ci
       - name: Run tests
         script: |
           npx jest --no-cache
@@ -17,6 +18,6 @@ workflows:
         script: |
           cd android
           chmod +x gradlew
-          ./gradlew assembleRelease
+          ./gradlew clean assembleRelease
     artifacts:
       - android/app/build/outputs/apk/**/*.apk
